@@ -1,0 +1,12 @@
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.6.1.js"></script>
+<script type="text/javascript" src="jquery.clickhold.js"></script>
+<script type="text/javascript" src="jquery.customanimation.js"></script>
+<script type="text/javascript">
+  $(function () {
+    $("span").clickhold(function (event) {
+      console.log("done")
+      }, {duration: 2000})
+  })
+</script>
+
+<span>click!</span>

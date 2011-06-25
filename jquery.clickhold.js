@@ -22,8 +22,6 @@
         }
         
         $(this).mousedown(function (evt) {
-            var date1 = new Date();
-            
             $target = $(evt.target);
             
             var pos = $(evt.target).offset()
@@ -40,28 +38,37 @@
     
             var timer = settings.holdLength;
     
-            function draw() {
-                var date2 = new Date();
-                var percentage = (date2 - date1) / timer;
-    
-                if (percentage < 1) {
-                    ctx.fillStyle = settings.incompletePieFill;
-                } else {
-                    ctx.fillStyle = settings.completePieFill;
-                }
-                
+            function drawCircle(time, fillStyle) {
+                ctx.fillStyle = fillStyle;
                 ctx.save();
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.beginPath();
-                ctx.arc(50, 50, 30, 0, Math.PI * 2 * percentage, false);
+                ctx.arc(50, 50, 30, 0, 2*Math.PI*time, false);
                 ctx.lineTo(50, 50);
                 ctx.closePath();
                 ctx.fill();
                 ctx.restore();
             }
+
+            function step(time, dt) {
+              drawCircle(time, settings.incompletePieFill)
+            }
+
+            var success = false
+
+            function complete() {
+              success = true
+              drawCircle(1.0, settings.completePieFill)
+            }
+
+            $canvas.customAnimation('queue', {
+              duration: settings.holdLength,
+              step: step,
+              complete: complete
+            })
     
             var n = 0;
-            function faildraw() {
+            function failstep() {
                 ctx.save();
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.globalAlpha = 1/(Math.exp(n/2-6)+1);
@@ -79,29 +86,29 @@
                 ctx.fillText(settings.instructionMessageText, 90, 50);
                 
                 n++;
-    
-                if (ctx.globalAlpha < 0.05) {
-                    clearInterval(interval);
-                    $canvas.remove();
-                }
                 
                 ctx.restore();
             }
+
+            function failcomplete() {
+              $canvas.remove()
+            }
     
-            var interval = setInterval(draw, 30);
     
             $(window).one('mouseup', function (evt) {
-                var date2 = new Date();
-                if (date2 - date1 > timer) {
-                    clearInterval(interval);
+                if (success) {
                     $canvas.remove();
                     
                     if(cb && cb != null) {
                         cb(evt);
                     }
                 } else {
-                    clearInterval(interval);
-                    interval = setInterval(faildraw, 30);
+                    $canvas.customAnimation('stop')
+                    $canvas.customAnimation('queue', {
+                        duration: 500,
+                        step: failstep,
+                        complete: failcomplete
+                    })
                 }
             });
         });
